@@ -1,9 +1,19 @@
 import pandas as pd
 
-# Replace 'your_file.csv' with the path to your CSV file
+# Load the CSV file into a pandas DataFrame
 df = pd.read_csv('mental-heath-in-tech-2016_20161114.csv')
 
+# Exploring the dataset
 # Get a summary of the dataset
 print(df.info())
-# Display the first few rows
-print(df.head())
+print(df.isnull().sum())
+
+# Get descriptive statistics for numerical columns
+print(df.describe())
+
+# Calculate
+missing_percentage = df.isnull().mean() * 100
+# Save to a text file
+missing_percentage.to_csv('missing_percentage.csv')
+
+
