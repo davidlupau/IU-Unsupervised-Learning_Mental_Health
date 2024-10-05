@@ -3,6 +3,8 @@ import pandas as pd
 # Load the CSV file into a pandas DataFrame
 df = pd.read_csv('mental-heath-in-tech-2016_20161114.csv')
 
-# Get descriptive statistics for both numerical and non-numerical columns
-describe_dataset = df.describe(include='all')
-describe_dataset.to_csv('describe_dataset.csv')
+# Calculate the percentage of each response in the 'remote_worker' column
+remote_worker_percentages = df['remote_worker'].value_counts(normalize=True) * 100
+
+# Display the percentages
+print(remote_worker_percentages)
