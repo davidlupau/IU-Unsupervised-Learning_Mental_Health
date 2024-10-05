@@ -8,3 +8,5 @@ remote_worker_percentages = df['remote_worker'].value_counts(normalize=True) * 1
 
 # Display the percentages
 print(remote_worker_percentages)
+
+# Test GitHub codespaces
