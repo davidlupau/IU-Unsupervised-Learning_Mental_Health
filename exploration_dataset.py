@@ -13,6 +13,7 @@ describe_dataset.to_csv('exploration_describe_dataset.csv')
 
 # Calculate missing values in each column
 missing_percentage = df.isnull().mean() * 100
+
 # Save to a csv file
 missing_percentage.to_csv('exploration_missing_percentage.csv')
 
