@@ -16,5 +16,3 @@ missing_percentage = df.isnull().mean() * 100
 
 # Save to a csv file
 missing_percentage.to_csv('exploration_missing_percentage.csv')
-
-

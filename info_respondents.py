@@ -1,6 +1,6 @@
 import pandas as pd
 import matplotlib.pyplot as plt
-from cleaning_dataset import drop_columns, correct_age
+from prepare_dataset import drop_columns, correct_age
 
 # Load the CSV file into a pandas DataFrame
 df = pd.read_csv('mental-heath-in-tech-2016_20161114.csv')

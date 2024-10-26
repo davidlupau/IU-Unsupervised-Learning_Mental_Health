@@ -1,18 +1,18 @@
 import pandas as pd
 import numpy as np
-from cleaning_dataset import replace_nulls, transform_categorical_to_numerical
+from prepare_dataset import replace_nulls, transform_categorical_to_numerical
 
-# Load your dataset
+def print_percentage_of_values(df, column_name):
+    # Calculate the value counts and convert to percentage
+    value_counts_percentage = df[column_name].value_counts(normalize=True) * 100
+
+    # Print each value and its percentage
+    for value, percentage in value_counts_percentage.items():
+        print(f"{value}: {percentage:.2f}%")
+
+# Load dataset into a pandas DataFrame
 df = pd.read_csv('mental-heath-in-tech-2016_20161114.csv')
 
-mapping = {
-    'Yes': 1,
-    'No': 0,
-    'I don\'t know': 0.5,
-}
+print(df['ask_mh_leave'].isnull().sum())
 
-df = transform_categorical_to_numerical(df, 'employer_discussed_mh', mapping)
-
-df = replace_nulls(df, 'tech_organization', distribution={1: 0.78, 0: 0.22})
-
-df.to_csv('test.csv')
+#df.to_csv('mental_health_tech_cleaned.csv')
