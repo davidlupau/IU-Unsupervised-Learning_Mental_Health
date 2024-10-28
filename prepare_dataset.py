@@ -8,7 +8,7 @@ def drop_columns(df):
         'tech_IT_primary_role', 'medical_coverage_mh', 'know_help_resources', 'observations_less_likely_reveal', 'reveal_mh_problem_client',
         'negative_impact_revealed_client', 'reveal_mh_problem_coworkers', 'negative_impact_revealed_coworkers',
         'productivity_affected', 'percent_worktime_impacted', 'previous_employer', 'reason_ph_interview', 'reason_mh_interview', 'mh_diagnostic',
-        'possible_mh_condition', 'mh_condition_diagnosed', 'us_state', 'work_us_state', 'work_position'
+        'possible_mh_condition', 'mh_condition_diagnosed', 'country', 'work_country', 'us_state', 'work_us_state', 'work_position'
     ]
     df_cleaned = df.drop(columns=columns_to_drop, axis=1)
     return df_cleaned

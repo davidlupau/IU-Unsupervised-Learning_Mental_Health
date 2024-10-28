@@ -1,6 +1,6 @@
 import pandas as pd
 import numpy as np
-from prepare_dataset import replace_nulls, transform_categorical_to_numerical
+from prepare_dataset import replace_nulls, transform_categorical_to_numerical, one_hot_encode
 
 def print_percentage_of_values(df, column_name):
     # Calculate the value counts and convert to percentage
@@ -13,6 +13,7 @@ def print_percentage_of_values(df, column_name):
 # Load dataset into a pandas DataFrame
 df = pd.read_csv('mental-heath-in-tech-2016_20161114.csv')
 
-print(df['ask_mh_leave'].isnull().sum())
-
-#df.to_csv('mental_health_tech_cleaned.csv')
+#print(df['ask_mh_leave'].isnull().sum())
+# Prepare the 'family_history' column for one-hot encoding
+df = one_hot_encode(df, 'family_history')
+df.to_csv('mental_health_tech_cleaned.csv')
