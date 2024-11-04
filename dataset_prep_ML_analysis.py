@@ -1,7 +1,6 @@
 import pandas as pd
 import numpy as np
-from prepare_dataset import drop_columns, correct_age, replace_nulls, transform_categorical_to_numerical, filter_rows, one_hot_encode, merge_normalise_current_previous_employer
-import matplotlib.pyplot as plt
+from dataset_cleaning_functions import drop_columns, correct_age, replace_nulls, transform_categorical_to_numerical, filter_rows, one_hot_encode, merge_normalise_current_previous_employer
 
 # Load the CSV file into a pandas DataFrame
 df = pd.read_csv('mental-heath-in-tech-2016_20161114.csv')
@@ -157,5 +156,4 @@ mapping = {
 }
 df = transform_categorical_to_numerical(df, 'remote_worker', mapping)
 
-#df.to_csv('mental_health_tech_cleaned.csv')
-#print(df.isnull().sum())
+df.to_csv('mental_health_tech_cleaned.csv', index=False)
