@@ -110,29 +110,36 @@ def merge_normalise_current_previous_employer(df):
     # Normalise responses
     def normalize_responses(value):
         response_mapping = {
-            "not eligible for coverage / n/a": np.nan,
-            "i don't know": np.nan,
-            "yes": 1,
-            "no": 0,
-            "maybe": 0.5,
-            "n/a (not currently aware)": np.nan,
-            "i am not sure": np.nan,
-            "yes, they all did": 1,
-            "no, none did": 0,
-            "some did": 1,
-            "n/a": np.nan,
-            "i was aware of some": 1,
-            "yes, i was aware of all of them": 1,
-            "no, i only became aware later": 1,
-            "none did": 0,
-            "yes, always": 1,
-            "sometimes": 1,
-            "none of them": 0,
-            "yes, all of them": 1,
-            "some of them": 1,
-            "some of my previous employers": 1,
-            "no, at none of my previous employers": 0,
-            "yes, at all of my previous employers": 1,
+            # Complete Negatives (0)
+        "no": 0,
+        "no, none did": 0,
+        "none did": 0,
+        "none of them": 0,
+        "no, at none of my previous employers": 0,
+
+        # Partial/Limited Cases (0.5)
+        "sometimes": 0.5,
+        "some did": 0.5,
+        "some of them": 0.5,
+        "some of my previous employers": 0.5,
+        "i was aware of some": 0.5,
+        "no, i only became aware later": 0.5,
+
+        # Complete Positives (1)
+        "yes": 1,
+        "yes, they all did": 1,
+        "yes, always": 1,
+        "yes, all of them": 1,
+        "yes, i was aware of all of them": 1,
+        "yes, at all of my previous employers": 1,
+
+        # Uncertainty/NA (np.nan)
+        "not eligible for coverage / n/a": np.nan,
+        "i don't know": np.nan,
+        "n/a (not currently aware)": np.nan,
+        "i am not sure": np.nan,
+        "n/a": np.nan,
+        "maybe": np.nan,
         }
         if pd.isna(value) or not isinstance(value, str):
             return np.nan
@@ -169,3 +176,35 @@ def merge_normalise_current_previous_employer(df):
     df.drop(columns=[col[1] for col in columns_to_merge], inplace=True)
 
     return df
+
+def analyze_pca_components(pca, feature_names):
+    """Analyze the principal components of a PCA model.
+    Parameters:
+    pca (PCA): The fitted PCA model.
+    feature_names (list): The list of feature names.
+    Returns:
+    DataFrame: A DataFrame with the feature loadings for the first two principal components.
+    """
+    # Get the feature loadings
+    loadings = pd.DataFrame(
+        pca.components_.T,
+        columns=[f'PC{i+1}' for i in range(pca.components_.shape[0])],
+        index=feature_names
+    )
+
+    # Get absolute loadings for first two PCs
+    pc1_loadings = abs(loadings['PC1'])
+    pc2_loadings = abs(loadings['PC2'])
+
+    # Create a dataframe with the loadings
+    importance_df = pd.DataFrame({
+        'Feature': feature_names,
+        'PC1_loading': pc1_loadings,
+        'PC2_loading': pc2_loadings
+    })
+
+    # Sort by importance in PC1 and PC2
+    pc1_top = importance_df.nlargest(5, 'PC1_loading')
+    pc2_top = importance_df.nlargest(5, 'PC2_loading')
+
+    return importance_df.sort_values(by=['PC1_loading', 'PC2_loading'], ascending=False)
