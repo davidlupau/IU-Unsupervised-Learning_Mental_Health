@@ -1,5 +1,9 @@
 import pandas as pd
 import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+from sklearn.preprocessing import StandardScaler
+from sklearn.decomposition import PCA
 
 # Function to drop columns identified as non-adding value to the analysis
 def drop_columns(df):
@@ -208,3 +212,132 @@ def analyze_pca_components(pca, feature_names):
     pc2_top = importance_df.nlargest(5, 'PC2_loading')
 
     return importance_df.sort_values(by=['PC1_loading', 'PC2_loading'], ascending=False)
+
+def plot_correlation_heatmap(df):
+    """Plot a correlation heatmap for the given DataFrame.
+    Parameters:
+    df (DataFrame): The DataFrame to plot the heatmap for.
+    """
+    # Compute the correlation matrix
+    cor_mat = df.corr(method='pearson')
+
+    # Create a larger figure size to accommodate more features
+    plt.figure(figsize=(20, 16))
+
+    # Create heatmap
+    ax = sns.heatmap(cor_mat,
+                     vmin=-1,
+                     vmax=1,
+                     annot=True,
+                     fmt='.2f',
+                     cmap='coolwarm',
+                     annot_kws={'size': 8})
+
+    # Rotate x-axis labels for better readability
+    plt.xticks(rotation=45, ha='right')
+    plt.yticks(rotation=0)
+
+    # Adjust layout to prevent label cutoff
+    plt.tight_layout()
+
+    # Show plot
+    plt.show()
+
+    # Compute the correlation matrix
+    cor_mat = df.corr(method='pearson')
+
+    # Create a larger figure size to accommodate more features
+    plt.figure(figsize=(20, 16))
+
+    # Create heatmap
+    ax = sns.heatmap(cor_mat,
+                     vmin=-1,
+                     vmax=1,
+                     annot=True,
+                     fmt='.2f',
+                     cmap='coolwarm',
+                     annot_kws={'size': 8})
+
+    # Rotate x-axis labels for better readability
+    plt.xticks(rotation=45, ha='right')
+    plt.yticks(rotation=0)
+
+    # Adjust layout to prevent label cutoff
+    plt.tight_layout()
+
+    # Show plot
+    plt.show()
+
+def perform_pca(df):
+    # 1. Standardize the data
+    X_std = StandardScaler().fit_transform(df)
+
+    # 2. Compute PCA and get explained variance ratio
+    pca = PCA().fit(X_std)
+    var_exp = pca.explained_variance_ratio_
+    print("Explained variance per PC:", var_exp)
+
+    # 3. Calculate cumulative explained variance
+    cum_var_exp = np.cumsum(var_exp)
+    print("Cumulative Explained Variance:", cum_var_exp)
+
+    # 4. Display the proportion of variance explained by first two PCs
+    print("Explained variance by PC1 and PC2:", sum(var_exp[0:2]))
+
+    # 5. Project data to two-dimensional space
+    Y = PCA(n_components=2).fit_transform(X_std)
+
+    # 6. Visualize the projected data
+    plt.figure(figsize=(8, 6))
+    plt.scatter(Y[:, 0], Y[:, 1])
+    plt.xlabel('First Principal Component')
+    plt.ylabel('Second Principal Component')
+    plt.title('Data projected onto first two principal components')
+    plt.show()
+
+def calculate_feature_variances(df):
+    # Calculate variance for each feature using original data
+    feature_variances = pd.DataFrame({
+        'Feature': df.columns,
+        'Variance': df.var()
+    })
+
+    # Sort features by variance in descending order
+    feature_variances = feature_variances.sort_values('Variance', ascending=False)
+
+    # Display top features by variance
+    print("Feature variances (original data):")
+    print(feature_variances)
+
+    # Create visualization
+    plt.figure(figsize=(12, 6))
+    plt.bar(range(len(feature_variances)), feature_variances['Variance'])
+    plt.xticks(range(len(feature_variances)), feature_variances['Feature'], rotation=45, ha='right')
+    plt.title('Feature Variances (Original Data)')
+    plt.xlabel('Features')
+    plt.ylabel('Variance')
+    plt.tight_layout()
+    plt.show()
+
+    # Calculate variance for each feature using original data
+    feature_variances = pd.DataFrame({
+        'Feature': df.columns,
+        'Variance': df.var()
+    })
+
+    # Sort features by variance in descending order
+    feature_variances = feature_variances.sort_values('Variance', ascending=False)
+
+    # Display top features by variance
+    print("Feature variances (original data):")
+    print(feature_variances)
+
+    # Create visualization
+    plt.figure(figsize=(12, 6))
+    plt.bar(range(len(feature_variances)), feature_variances['Variance'])
+    plt.xticks(range(len(feature_variances)), feature_variances['Feature'], rotation=45, ha='right')
+    plt.title('Feature Variances (Original Data)')
+    plt.xlabel('Features')
+    plt.ylabel('Variance')
+    plt.tight_layout()
+    plt.show()

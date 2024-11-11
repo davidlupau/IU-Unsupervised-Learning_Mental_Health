@@ -16,7 +16,12 @@ df = one_hot_encode(df, 'self_employed')
 
 # Create binary "flag" for respondents who skipped company questions
 # First identify the columns for questions 2-16
-company_related_columns = ['company_size', 'tech_organization', 'employer_mh_benefits', 'know_mh_benefits', 'employer_discussed_mh', 'employer_mh_resources', 'anonymous_mh_employer_resources', 'ask_mh_leave', 'discuss_mh_with_employer_negative', 'discuss_ph_with_employer_negative', 'discuss_mh_with_coworkers', 'discuss_mh_with_manager', 'employer_mh_as_serious_as_ph', 'observed_negative_consequences_coworkers']
+company_related_columns = [
+	'company_size', 'tech_organization', 'employer_mh_benefits', 'know_mh_benefits', 'employer_discussed_mh',
+	'employer_mh_resources', 'anonymous_mh_employer_resources', 'ask_mh_leave', 'discuss_mh_with_employer_negative',
+	'discuss_ph_with_employer_negative', 'discuss_mh_with_coworkers', 'discuss_mh_with_manager',
+	'employer_mh_as_serious_as_ph', 'observed_negative_consequences_coworkers'
+]
 # Create the "flag"
 df['skipped_company_questions'] = df[company_related_columns].isnull().all(axis=1).astype(int)
 

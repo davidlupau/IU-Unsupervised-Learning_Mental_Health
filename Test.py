@@ -1,56 +1,75 @@
 import pandas as pd
+from sklearn.cluster import KMeans
+from sklearn.metrics import silhouette_score
+from sklearn.preprocessing import StandardScaler
+import matplotlib.pyplot as plt
+from yellowbrick.cluster import KElbowVisualizer
+import seaborn as sns
 import numpy as np
-from functions import drop_columns, correct_age, replace_nulls, transform_categorical_to_numerical, filter_rows, one_hot_encode, merge_normalise_current_previous_employer
+from sklearn.decomposition import PCA
+from functions import analyze_pca_components
 
-# Load the CSV file into a pandas DataFrame
-df = pd.read_csv('mental-heath-in-tech-2016_20161114.csv')
+# Load clean dataset
+df = pd.read_csv('mental_health_tech_cleaned.csv')
 
-# Clean the dataset
-df = filter_rows(df)
-df = drop_columns(df)
-df = correct_age(df)
+# Drop columns with high correlation
+columns_to_drop = [
+        'skipped_company_questions', 'self_employed_1', 'tech_organization_0.0',
+        'gender_Non-binary/Other', 'gender_Female', 'family_history_0.5', 'family_history_0.0'
+    ]
+df = df.drop(columns=columns_to_drop, axis=1)
 
-# Preparing the dataset for analysis
-# Perform one-hot encoding on the 'self_employed' column
-df = one_hot_encode(df, 'self_employed')
+# Create mental health risk score
+df['mental_health_score'] = (df['mh_treatment'] +
+                           df['past_mh_disorder'] +
+                           df['current_mh_disorder'] +
+                           df['mh_diagnostic_medical_pro']) / 4  # Divide by 4 to keep 0-1 scale
 
-# Create binary "flag" for respondents who skipped company questions
-# First identify the columns for questions 2-16
-company_related_columns = ['company_size', 'tech_organization', 'employer_mh_benefits', 'know_mh_benefits', 'employer_discussed_mh', 'employer_mh_resources', 'anonymous_mh_employer_resources', 'ask_mh_leave', 'discuss_mh_with_employer_negative', 'discuss_ph_with_employer_negative', 'discuss_mh_with_coworkers', 'discuss_mh_with_manager', 'employer_mh_as_serious_as_ph', 'observed_negative_consequences_coworkers']
-# Create the "flag"
-df['skipped_company_questions'] = df[company_related_columns].isnull().all(axis=1).astype(int)
+# Remove original features after creating the new one
+columns_to_drop = ['mh_treatment', 'past_mh_disorder',
+                  'current_mh_disorder', 'mh_diagnostic_medical_pro']
+df = df.drop(columns=columns_to_drop)
 
-# Transforming categorical values to numerical values and replacing null values for 'company_size'
-mapping = {
-    '1-5 employees': 1,
-	'6-25 employees': 2,
-	'26-100 employees': 3,
-	'100-500 employees': 4,
-	'500-1000 employees': 5,
-	'More than 1000 employees': 6,
-}
-df = transform_categorical_to_numerical(df, 'company_size', mapping)
-df = replace_nulls(df, 'company_size', distribution={1: 0.05, 2: 0.22, 3: 0.25, 4: 0.07, 5: 0.18, 6: 0.22})
+# Calculate variance for each feature using original data
+feature_variances = pd.DataFrame({
+    'Feature': df.columns,
+    'Variance': df.var()
+})
 
-# Prepare the 'tech_organization' column for one-hot encoding
-df = replace_nulls(df, 'tech_organization', distribution={1: 0.78, 0: 0.22})
-df = one_hot_encode(df, 'tech_organization')
+# Sort features by variance in descending order
+feature_variances = feature_variances.sort_values('Variance', ascending=False)
 
-# Transforming categorical values to numerical values and replacing null values for 'ask_mh_leave'
-mapping = {
-    'Very difficult': 1,
-	'Somewhat difficult': 2,
-	'Neither easy nor difficult': 3,
-	'Somewhat easy': 4,
-	'Very easy': 5,
-	'I don’t know': np.nan,
-}
-df = transform_categorical_to_numerical(df, 'ask_mh_leave', mapping)
-df = replace_nulls(df, 'ask_mh_leave', distribution={1: 0.1, 2: 0.17, 3: 0.16, 4: 0.25, 5: 0.19})
+# Display top features by variance
+print("Feature variances (original data):")
+print(feature_variances)
 
-# Merging and normalising same questions about current and previous employer
-merge_normalise_current_previous_employer(df)
+# Create visualization
+plt.figure(figsize=(12, 6))
+plt.bar(range(len(feature_variances)), feature_variances['Variance'])
+plt.xticks(range(len(feature_variances)), feature_variances['Feature'], rotation=45, ha='right')
+plt.title('Feature Variances (Original Data)')
+plt.xlabel('Features')
+plt.ylabel('Variance')
+plt.tight_layout()
+#plt.show()
 
+# List of features with variance >= 0.147
+selected_features = [
+    'family_history_1.0',
+    'employer_mh_benefits',
+    'employer_mh_as_serious_as_ph',
+    'gender_Male',
+    'discuss_mh_with_manager',
+    'tech_organization_1.0',
+    'employer_mh_resources',
+    'company_size',
+    'discuss_mh_with_employer_negative',
+    'mental_health_score',
+    'discuss_mh_with_coworkers',
+    'ask_mh_leave',
+    'employer_discussed_mh',
+    'self_employed_0'
+]
 
-
-#df.to_csv('mental_health_tech_merged.csv', index=False)
+# Create new dataframe with only selected features
+df = df[selected_features]
