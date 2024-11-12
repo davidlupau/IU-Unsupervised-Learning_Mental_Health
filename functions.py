@@ -4,6 +4,9 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from sklearn.preprocessing import StandardScaler
 from sklearn.decomposition import PCA
+from sklearn.metrics import silhouette_score
+from yellowbrick.cluster import KElbowVisualizer
+from sklearn.cluster import KMeans
 
 # Function to drop columns identified as non-adding value to the analysis
 def drop_columns(df):
@@ -240,9 +243,6 @@ def plot_correlation_heatmap(df):
     # Adjust layout to prevent label cutoff
     plt.tight_layout()
 
-    # Show plot
-    plt.show()
-
     # Compute the correlation matrix
     cor_mat = df.corr(method='pearson')
 
@@ -309,16 +309,6 @@ def calculate_feature_variances(df):
     print("Feature variances (original data):")
     print(feature_variances)
 
-    # Create visualization
-    plt.figure(figsize=(12, 6))
-    plt.bar(range(len(feature_variances)), feature_variances['Variance'])
-    plt.xticks(range(len(feature_variances)), feature_variances['Feature'], rotation=45, ha='right')
-    plt.title('Feature Variances (Original Data)')
-    plt.xlabel('Features')
-    plt.ylabel('Variance')
-    plt.tight_layout()
-    plt.show()
-
     # Calculate variance for each feature using original data
     feature_variances = pd.DataFrame({
         'Feature': df.columns,
@@ -341,3 +331,108 @@ def calculate_feature_variances(df):
     plt.ylabel('Variance')
     plt.tight_layout()
     plt.show()
+
+def analyze_optimal_clusters(df, k_range=(2, 11)):
+    """
+    Analyze optimal number of clusters using KElbowVisualizer and silhouette score
+    :param df: DataFrame
+    :param k_range: tuple, range of k values to test
+    :return: X_scaled, results
+    """
+    # Standardize the data
+    scaler = StandardScaler()
+    X_scaled = scaler.fit_transform(df)
+
+    # Create figure for subplots
+    plt.figure(figsize=(15, 5))
+
+    # Plot 1: KElbowVisualizer
+    plt.subplot(1, 2, 1)
+    plt.title('Elbow Method')
+    plt.xlabel('Number of clusters (k)')
+    model = KMeans()
+    visualizer = KElbowVisualizer(model, k=(1, 8), timings=False, ax=plt.gca())
+    visualizer.fit(df)
+    visualizer.ax.set_ylabel('Elbow Score', labelpad=30)
+
+    # Plot 2: Silhouette Analysis
+    plt.subplot(1, 2, 2)
+
+    # Calculate silhouette scores
+    silhouette_scores = []
+    k_values = range(2, k_range[1])
+
+    for k in k_values:
+        kmeans = KMeans(n_clusters=k, random_state=42)
+        kmeans.fit(X_scaled)
+        silhouette_scores.append(silhouette_score(X_scaled, kmeans.labels_))
+
+    # Plot silhouette scores
+    plt.plot(k_values, silhouette_scores, 'ro-', marker='o')
+    plt.xlabel('Number of clusters (k)')
+    plt.ylabel('Silhouette Score')
+    plt.title('Silhouette Analysis')
+    plt.grid(True)
+
+    plt.tight_layout()
+    plt.show()
+
+    # Print the silhouette scores for detailed analysis
+    results = pd.DataFrame({
+        'k': list(k_values),
+        'silhouette_score': silhouette_scores
+    })
+    print("\nSilhouette scores for each k:")
+    print(results.to_string(index=False))
+
+    return X_scaled, results
+
+def analyze_clusters(df):
+    """
+    Perform k-means clustering and analyze the results
+    """
+    # Standardize the data
+    scaler = StandardScaler()
+    X_scaled = scaler.fit_transform(df)
+
+    # Perform k-means clustering
+    kmeans = KMeans(n_clusters=3, random_state=42)
+    labels = kmeans.fit_predict(X_scaled)
+
+    # Add cluster labels to original dataframe
+    df_clustered = df.copy()
+    df_clustered['Cluster'] = labels
+
+    # Basic cluster statistics
+    cluster_sizes = pd.Series(labels).value_counts().sort_index()
+    print("\nCluster Sizes:")
+    for cluster, size in cluster_sizes.items():
+        print(f"Cluster {cluster}: {size} samples ({size/len(df)*100:.1f}%)")
+
+    # Calculate cluster characteristics
+    cluster_means = df_clustered.groupby('Cluster').mean()
+    cluster_std = df_clustered.groupby('Cluster').std()
+
+    # Find distinctive features for each cluster
+    print("\nDistinctive Features per Cluster:")
+    for cluster in range(3):
+        # Calculate z-scores for this cluster's means
+        z_scores = (cluster_means.loc[cluster] - df.mean()) / df.std()
+
+        # Get top distinctive features (most deviant from overall mean)
+        distinctive_features = z_scores.abs().sort_values(ascending=False)[:5]
+
+        print(f"\nCluster {cluster} ({cluster_sizes[cluster]} samples):")
+        for feature in distinctive_features.index:
+            direction = "higher" if z_scores[feature] > 0 else "lower"
+            print(f"- {feature}: {direction} than average "
+                  f"(z-score: {z_scores[feature]:.2f})")
+
+    # Calculate feature importance for cluster separation
+    feature_importance = pd.DataFrame(
+        scaler.transform(cluster_means),
+        columns=df.columns,
+        index=[f"Cluster {i}" for i in range(3)]
+    )
+
+    return df_clustered, feature_importance

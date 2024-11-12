@@ -1,13 +1,5 @@
 import pandas as pd
-from sklearn.cluster import KMeans
-from sklearn.metrics import silhouette_score
-from sklearn.preprocessing import StandardScaler
-import matplotlib.pyplot as plt
-from yellowbrick.cluster import KElbowVisualizer
-import seaborn as sns
-import numpy as np
-from sklearn.decomposition import PCA
-from functions import plot_correlation_heatmap, perform_pca, calculate_feature_variances
+from functions import plot_correlation_heatmap, perform_pca, calculate_feature_variances, analyze_optimal_clusters, analyze_clusters
 
 # Load clean dataset
 df = pd.read_csv('mental_health_tech_cleaned.csv')
@@ -66,37 +58,22 @@ selected_features = [
 # Create new dataframe with only selected features
 df = df[selected_features]
 
-# Find the optimal number of clusters using the Elbow and silhouette methods
-# create a k-Means model an Elbow-Visualizer
-model = KMeans()
-visualizer = KElbowVisualizer(model, k=(1,8), \
-   timings=False)
-# fit the visualizer and show the plot
-visualizer.fit(df)
-visualizer.ax.set_ylabel('Elbow Score', labelpad=30)
-visualizer.show()
+# Calculate the optimal number of clusters using the elbow method and silhouette score
+analyze_optimal_clusters(df, k_range=(2, 11))
 
-# Calculate the silhouette score for different numbers of clusters
-# Standardizing the data
-scaler = StandardScaler()
-X_scaled = scaler.fit_transform(df)
-
-# Trying different numbers of clusters and storing silhouette scores
-silhouette_scores = []
-K = range(2, 11)  # Trying clusters from 2 to 10
-for k in K:
-    kmeans = KMeans(n_clusters=k, random_state=42)
-    kmeans.fit(X_scaled)
-    labels = kmeans.labels_
-    silhouette_scores.append(silhouette_score(X_scaled, labels))
-
-# Plotting the results
-plt.figure(figsize=(10, 6))
-plt.plot(K, silhouette_scores, marker='o')
-plt.xlabel('Number of clusters, k')
-plt.ylabel('Silhouette Score')
-plt.title('Silhouette Analysis for Optimal k')
-plt.grid(True)
-plt.show()
+# Run the analysis
+X_scaled, results = analyze_optimal_clusters(df)
 
 # k-Means clustering with 3 clusters
+df_clustered, feature_importance = analyze_clusters(df)
+
+# Investigate mental health score by cluster
+# Calculate average mental health score per cluster
+print("\nMental Health Score by Cluster:")
+print(df_clustered.groupby('Cluster')['mental_health_score'].agg(['mean', 'std']))
+
+# Compare distribution of scores across clusters
+print("\nMental Health Score Distribution by Cluster:")
+for cluster in range(3):
+    print(f"\nCluster {cluster}:")
+    print(df_clustered[df_clustered['Cluster'] == cluster]['mental_health_score'].describe())

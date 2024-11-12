@@ -1,13 +1,5 @@
 import pandas as pd
-from sklearn.cluster import KMeans
-from sklearn.metrics import silhouette_score
-from sklearn.preprocessing import StandardScaler
-import matplotlib.pyplot as plt
-from yellowbrick.cluster import KElbowVisualizer
-import seaborn as sns
-import numpy as np
-from sklearn.decomposition import PCA
-from functions import analyze_pca_components
+
 
 # Load clean dataset
 df = pd.read_csv('mental_health_tech_cleaned.csv')
@@ -30,29 +22,6 @@ columns_to_drop = ['mh_treatment', 'past_mh_disorder',
                   'current_mh_disorder', 'mh_diagnostic_medical_pro']
 df = df.drop(columns=columns_to_drop)
 
-# Calculate variance for each feature using original data
-feature_variances = pd.DataFrame({
-    'Feature': df.columns,
-    'Variance': df.var()
-})
-
-# Sort features by variance in descending order
-feature_variances = feature_variances.sort_values('Variance', ascending=False)
-
-# Display top features by variance
-print("Feature variances (original data):")
-print(feature_variances)
-
-# Create visualization
-plt.figure(figsize=(12, 6))
-plt.bar(range(len(feature_variances)), feature_variances['Variance'])
-plt.xticks(range(len(feature_variances)), feature_variances['Feature'], rotation=45, ha='right')
-plt.title('Feature Variances (Original Data)')
-plt.xlabel('Features')
-plt.ylabel('Variance')
-plt.tight_layout()
-#plt.show()
-
 # List of features with variance >= 0.147
 selected_features = [
     'family_history_1.0',
@@ -73,3 +42,11 @@ selected_features = [
 
 # Create new dataframe with only selected features
 df = df[selected_features]
+
+import pandas as pd
+import numpy as np
+from sklearn.cluster import KMeans
+from sklearn.preprocessing import StandardScaler
+
+
+# Run the analysis
