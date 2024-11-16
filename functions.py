@@ -17,15 +17,15 @@ def drop_columns(df):
         'productivity_affected', 'percent_worktime_impacted', 'previous_employer', 'reason_ph_interview', 'reason_mh_interview', 'mh_diagnostic',
         'possible_mh_condition', 'mh_condition_diagnosed', 'country', 'work_country', 'us_state', 'work_us_state', 'work_position'
     ]
-    df_cleaned = df.drop(columns=columns_to_drop, axis=1)
-    return df_cleaned
+    df = df.drop(columns=columns_to_drop, axis=1)
+    return df
 
 # Function to correct the incorrect age values
 def correct_age(df):
     """Replaces ages below 15 and above 75 with the median age."""
-    median_age = df['age'].median()  # Calculate the median
-    df.loc[df['age'] < 15, 'age'] = median_age  # Replace ages below 15
-    df.loc[df['age'] > 75, 'age'] = median_age  # Replace ages above 75
+    median_age = df['age'].median()
+    df.loc[df['age'] < 15, 'age'] = median_age
+    df.loc[df['age'] > 75, 'age'] = median_age
     return df
 
 # Function to replace missing values based on a specified distribution
@@ -184,65 +184,11 @@ def merge_normalise_current_previous_employer(df):
 
     return df
 
-def analyze_pca_components(pca, feature_names):
-    """Analyze the principal components of a PCA model.
-    Parameters:
-    pca (PCA): The fitted PCA model.
-    feature_names (list): The list of feature names.
-    Returns:
-    DataFrame: A DataFrame with the feature loadings for the first two principal components.
-    """
-    # Get the feature loadings
-    loadings = pd.DataFrame(
-        pca.components_.T,
-        columns=[f'PC{i+1}' for i in range(pca.components_.shape[0])],
-        index=feature_names
-    )
-
-    # Get absolute loadings for first two PCs
-    pc1_loadings = abs(loadings['PC1'])
-    pc2_loadings = abs(loadings['PC2'])
-
-    # Create a dataframe with the loadings
-    importance_df = pd.DataFrame({
-        'Feature': feature_names,
-        'PC1_loading': pc1_loadings,
-        'PC2_loading': pc2_loadings
-    })
-
-    # Sort by importance in PC1 and PC2
-    pc1_top = importance_df.nlargest(5, 'PC1_loading')
-    pc2_top = importance_df.nlargest(5, 'PC2_loading')
-
-    return importance_df.sort_values(by=['PC1_loading', 'PC2_loading'], ascending=False)
-
 def plot_correlation_heatmap(df):
     """Plot a correlation heatmap for the given DataFrame.
     Parameters:
     df (DataFrame): The DataFrame to plot the heatmap for.
     """
-    # Compute the correlation matrix
-    cor_mat = df.corr(method='pearson')
-
-    # Create a larger figure size to accommodate more features
-    plt.figure(figsize=(20, 16))
-
-    # Create heatmap
-    ax = sns.heatmap(cor_mat,
-                     vmin=-1,
-                     vmax=1,
-                     annot=True,
-                     fmt='.2f',
-                     cmap='coolwarm',
-                     annot_kws={'size': 8})
-
-    # Rotate x-axis labels for better readability
-    plt.xticks(rotation=45, ha='right')
-    plt.yticks(rotation=0)
-
-    # Adjust layout to prevent label cutoff
-    plt.tight_layout()
-
     # Compute the correlation matrix
     cor_mat = df.corr(method='pearson')
 
@@ -335,9 +281,10 @@ def calculate_feature_variances(df):
 def analyze_optimal_clusters(df, k_range=(2, 11)):
     """
     Analyze optimal number of clusters using KElbowVisualizer and silhouette score
-    :param df: DataFrame
-    :param k_range: tuple, range of k values to test
-    :return: X_scaled, results
+    Parameter:
+        df: DataFrame
+        :param k_range: tuple, range of k values to test
+    Return: X_scaled, results
     """
     # Standardize the data
     scaler = StandardScaler()
@@ -353,12 +300,11 @@ def analyze_optimal_clusters(df, k_range=(2, 11)):
     model = KMeans()
     visualizer = KElbowVisualizer(model, k=(1, 8), timings=False, ax=plt.gca())
     visualizer.fit(df)
+    visualizer.finalize()  # This replaces show()
     visualizer.ax.set_ylabel('Elbow Score', labelpad=30)
 
     # Plot 2: Silhouette Analysis
     plt.subplot(1, 2, 2)
-
-    # Calculate silhouette scores
     silhouette_scores = []
     k_values = range(2, k_range[1])
 
@@ -367,7 +313,6 @@ def analyze_optimal_clusters(df, k_range=(2, 11)):
         kmeans.fit(X_scaled)
         silhouette_scores.append(silhouette_score(X_scaled, kmeans.labels_))
 
-    # Plot silhouette scores
     plt.plot(k_values, silhouette_scores, 'ro-', marker='o')
     plt.xlabel('Number of clusters (k)')
     plt.ylabel('Silhouette Score')
@@ -376,6 +321,8 @@ def analyze_optimal_clusters(df, k_range=(2, 11)):
 
     plt.tight_layout()
     plt.show()
+
+    return X_scaled, pd.DataFrame({'k': list(k_values), 'silhouette_score': silhouette_scores})
 
     # Print the silhouette scores for detailed analysis
     results = pd.DataFrame({

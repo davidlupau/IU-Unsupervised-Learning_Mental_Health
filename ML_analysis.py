@@ -5,6 +5,7 @@ from functions import plot_correlation_heatmap, perform_pca, calculate_feature_v
 df = pd.read_csv('mental_health_tech_cleaned.csv')
 
 # Calculations Pearson correlation matrix
+print("Pearson correlation matrix")
 plot_correlation_heatmap(df)
 
 # Drop columns with high correlation
@@ -32,12 +33,14 @@ for i, col in enumerate(df.columns, 1):
     print(f"{i}. {col}")
 
 # Perform PCA on the dataset and analyze the principal components
-perform_pca(df)
+print("\nResults of PCA:")
+pca_results = perform_pca(df)
 
 # Calculate variance for each feature to select the most relevant ones
+print("\nFeature variances:")
 calculate_feature_variances(df)
 
-# List of features with variance >= 0.147
+# List of features with variance >= 0.147 + remote_worker
 selected_features = [
     'family_history_1.0',
     'employer_mh_benefits',
@@ -52,7 +55,8 @@ selected_features = [
     'discuss_mh_with_coworkers',
     'ask_mh_leave',
     'employer_discussed_mh',
-    'self_employed_0'
+    'self_employed_0',
+    'remote_worker'
 ]
 
 # Create new dataframe with only selected features
@@ -65,15 +69,10 @@ analyze_optimal_clusters(df, k_range=(2, 11))
 X_scaled, results = analyze_optimal_clusters(df)
 
 # k-Means clustering with 3 clusters
+print("\nResults of k-Means clustering:")
 df_clustered, feature_importance = analyze_clusters(df)
 
 # Investigate mental health score by cluster
 # Calculate average mental health score per cluster
 print("\nMental Health Score by Cluster:")
 print(df_clustered.groupby('Cluster')['mental_health_score'].agg(['mean', 'std']))
-
-# Compare distribution of scores across clusters
-print("\nMental Health Score Distribution by Cluster:")
-for cluster in range(3):
-    print(f"\nCluster {cluster}:")
-    print(df_clustered[df_clustered['Cluster'] == cluster]['mental_health_score'].describe())
