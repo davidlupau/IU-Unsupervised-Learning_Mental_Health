@@ -36,7 +36,7 @@ Run the following Python files in order:
 ├── dataset_prep_ML_analysis.py   # Data preprocessing
 ├── ML_analysis.py                # Machine learning analysis
 ├── functions.py                  # Helper functions
-└── README.md
+├── README.md
 └── LICENSE.md
 ```
 
